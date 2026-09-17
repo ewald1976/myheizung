@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import MAX_TEMP, MIN_TEMP
-from .entity import HeizplanEntity
+from .entity import HeizplanEntity, hub_device
 
 
 async def async_setup_entry(
@@ -18,8 +18,8 @@ async def async_setup_entry(
     manager = entry.runtime_data
     async_add_entities(
         [
-            HeizplanTemperature(manager, "comfort_temp", "Heizplan Warm-Temperatur", "mdi:fire"),
-            HeizplanTemperature(manager, "eco_temp", "Heizplan Nacht-Temperatur", "mdi:weather-night"),
+            HeizplanTemperature(manager, "comfort_temp", "Warm-Temperatur", "mdi:fire"),
+            HeizplanTemperature(manager, "eco_temp", "Nacht-Temperatur", "mdi:weather-night"),
         ]
     )
 
@@ -32,7 +32,7 @@ class HeizplanTemperature(HeizplanEntity, NumberEntity):
     _attr_mode = NumberMode.BOX
 
     def __init__(self, manager, key: str, name: str, icon: str) -> None:
-        super().__init__(manager)
+        super().__init__(manager, hub_device(manager))
         self._key = key
         self._attr_unique_id = f"{manager.entry.entry_id}_{key}"
         self._attr_name = name

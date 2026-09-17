@@ -58,7 +58,7 @@ async def test_start_applies_plan_and_fixes_sensor(hass, setup):
     assert [c.data for c in calls["select"]] == [
         {"entity_id": "select.thermostat_buro_sensor", "option": "external"}
     ]
-    state = hass.states.get("sensor.heizplan_buro")
+    state = hass.states.get("sensor.heizplan_buro_solltemperatur")
     assert float(state.state) == 23.0
     assert state.attributes["sensor_resets"] == 1
     assert state.attributes["next_mode"] == "eco"
@@ -137,7 +137,7 @@ async def test_websocket_exception_and_settings(hass, setup, hass_ws_client):
 async def test_disabled_room_is_not_touched(hass, setup):
     _, calls = setup
     calls["temp"].clear()
-    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.heizplan_wohnzimmer_aktiv"}, blocking=True)
+    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.heizplan_wohnzimmer_plan_aktiv"}, blocking=True)
     await hass.services.async_call("number", "set_value", {"entity_id": "number.heizplan_warm_temperatur", "value": 24}, blocking=True)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert _temps(calls) == {"climate.thermostat_buro": 24.0}

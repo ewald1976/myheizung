@@ -40,10 +40,13 @@ rooms: [buro]         # nur bestimmte Räume anzeigen
 
 ## Entities
 
+Pro Raum legt Heizplan ein eigenes Gerät „Heizplan <Raum>“ an, das sich einem Bereich
+zuordnen lässt. Die globalen Temperaturen hängen am Gerät „Heizplan“.
+
 | Entity | Zweck |
 |---|---|
-| `sensor.heizplan_<raum>` | aktuelle Solltemperatur, Attribute: Modus, Quelle, nächster Wechsel, Sensor-Korrekturen |
-| `switch.heizplan_<raum>_aktiv` | Plan für den Raum an/aus |
+| `sensor.heizplan_<raum>_solltemperatur` | aktuelle Solltemperatur, Attribute: Modus, Quelle, nächster Wechsel, Sensor-Korrekturen |
+| `switch.heizplan_<raum>_plan_aktiv` | Plan für den Raum an/aus |
 | `number.heizplan_warm_temperatur`, `number.heizplan_nacht_temperatur` | globale Temperaturen |
 
 Dienste für eigene Automationen: `heizplan.add_exception`, `heizplan.delete_exception`.

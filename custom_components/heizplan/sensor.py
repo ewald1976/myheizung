@@ -10,7 +10,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import HeizplanEntity
+from .entity import HeizplanEntity, room_device
 
 
 async def async_setup_entry(
@@ -24,13 +24,13 @@ class HeizplanRoomSensor(HeizplanEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_icon = "mdi:calendar-clock"
+    _attr_name = "Solltemperatur"
 
     def __init__(self, manager, room: dict[str, Any]) -> None:
-        super().__init__(manager)
+        super().__init__(manager, room_device(manager, room))
         self._room_id = room["id"]
         self._room = room
         self._attr_unique_id = f"{manager.entry.entry_id}_{room['id']}_target"
-        self._attr_name = f"Heizplan {room['name']}"
 
     @property
     def native_value(self) -> float:

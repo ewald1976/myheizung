@@ -3,7 +3,7 @@
 from .logic import MODE_COMFORT, MODE_ECO, MODES  # noqa: F401
 
 DOMAIN = "heizplan"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 CONF_CLIMATES = "climates"
 CONF_ROOMS = "rooms"

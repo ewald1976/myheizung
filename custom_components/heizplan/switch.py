@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import HeizplanEntity
+from .entity import HeizplanEntity, room_device
 
 
 async def async_setup_entry(
@@ -21,12 +21,12 @@ async def async_setup_entry(
 
 class HeizplanRoomSwitch(HeizplanEntity, SwitchEntity):
     _attr_icon = "mdi:calendar-check"
+    _attr_name = "Plan aktiv"
 
     def __init__(self, manager, room: dict[str, Any]) -> None:
-        super().__init__(manager)
+        super().__init__(manager, room_device(manager, room))
         self._room_id = room["id"]
         self._attr_unique_id = f"{manager.entry.entry_id}_{room['id']}_enabled"
-        self._attr_name = f"Heizplan {room['name']} aktiv"
 
     @property
     def is_on(self) -> bool:
