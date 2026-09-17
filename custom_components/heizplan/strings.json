@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Heizplan einrichten",
+        "description": "Welche Thermostate soll Heizplan steuern? Jedes Thermostat wird ein Raum.",
+        "data": { "climates": "Thermostate" }
+      },
+      "sensors": {
+        "title": "Externe Temperatursensoren",
+        "description": "Optional: Hygrometer pro Thermostat. Heizplan überträgt die Temperatur regelmäßig ans Thermostat und stellt die Sensor-Auswahl automatisch zurück auf 'external', falls das Thermostat auf 'internal' springt (Aqara-E1-Bug)."
+      }
+    },
+    "abort": { "already_configured": "Heizplan ist bereits eingerichtet.", "single_instance_allowed": "Heizplan ist bereits eingerichtet." }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Räume",
+        "description": "Welche Thermostate soll Heizplan steuern?",
+        "data": { "climates": "Thermostate" }
+      },
+      "sensors": {
+        "title": "Externe Temperatursensoren",
+        "description": "Optional: Hygrometer pro Thermostat. Heizplan überträgt die Temperatur und korrigiert die Sensor-Auswahl auf 'external'."
+      }
+    }
+  },
+  "services": {
+    "add_exception": {
+      "name": "Ausnahme anlegen",
+      "description": "Legt eine zeitlich begrenzte Ausnahme vom Wochenplan an.",
+      "fields": {
+        "rooms": { "name": "Räume", "description": "Raum-IDs (z. B. buro, wohnzimmer) oder 'all'." },
+        "start": { "name": "Beginn", "description": "Datum und Uhrzeit, z. B. 2026-12-20T08:00" },
+        "end": { "name": "Ende", "description": "Datum und Uhrzeit, z. B. 2026-12-27T18:00" },
+        "mode": { "name": "Modus", "description": "comfort (Warm) oder eco (Nacht)" },
+        "note": { "name": "Notiz", "description": "Optionale Beschreibung" }
+      }
+    },
+    "delete_exception": {
+      "name": "Ausnahme löschen",
+      "description": "Löscht eine Ausnahme oder nimmt einen Raum aus ihr heraus.",
+      "fields": {
+        "exception_id": { "name": "Ausnahme-ID", "description": "ID der Ausnahme" },
+        "room_id": { "name": "Raum", "description": "Nur diesen Raum aus der Ausnahme entfernen" }
+      }
+    }
+  }
+}

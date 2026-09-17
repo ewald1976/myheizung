@@ -1,0 +1,38 @@
+add_exception:
+  fields:
+    rooms:
+      required: true
+      example: "buro"
+      selector:
+        text:
+          multiple: true
+    start:
+      required: true
+      example: "2026-12-20T08:00"
+      selector:
+        datetime:
+    end:
+      required: true
+      example: "2026-12-27T18:00"
+      selector:
+        datetime:
+    mode:
+      required: true
+      default: eco
+      selector:
+        select:
+          options:
+            - comfort
+            - eco
+    note:
+      selector:
+        text:
+delete_exception:
+  fields:
+    exception_id:
+      required: true
+      selector:
+        text:
+    room_id:
+      selector:
+        text:
