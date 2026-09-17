@@ -1,13 +1,20 @@
 {
   "domain": "heizplan",
   "name": "Heizplan",
-  "codeowners": [],
+  "codeowners": [
+    "@ewald1976"
+  ],
   "config_flow": true,
-  "dependencies": ["http", "frontend", "websocket_api"],
-  "documentation": "https://github.com/",
+  "dependencies": [
+    "http",
+    "frontend",
+    "websocket_api"
+  ],
+  "documentation": "https://github.com/ewald1976/myheizung",
   "integration_type": "service",
   "iot_class": "calculated",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "issue_tracker": "https://github.com/ewald1976/myheizung/issues"
 }
