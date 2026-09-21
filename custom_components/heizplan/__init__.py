@@ -52,10 +52,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await hass.http.async_register_static_paths(
         [StaticPathConfig(FRONTEND_URL, str(Path(__file__).parent / "frontend"), False)]
     )
-    # es5=True lädt die Karte als klassisches <script> statt als ES-Modul: einige
-    # Android-WebViews (z. B. in der HA-Companion-App) laden dynamisch eingefügte
-    # type="module"-Skripte unzuverlässig ("Custom element doesn't exist").
-    add_extra_js_url(hass, f"{FRONTEND_URL}/heizplan-card.js?v={VERSION}", es5=True)
+    # HA liefert Clients je nach Browser-Erkennung entweder das moderne
+    # (ES-Modul-)Frontend oder das ES5-Legacy-Frontend aus und lädt "extra js url"
+    # nur für den jeweils passenden Pfad. Manche Clients (z. B. die Android-
+    # Companion-App) landen im ES5-Pfad, obwohl sie type="module" eigentlich
+    # unterstützen – daher hier in beiden Pfaden registrieren, statt zu raten.
+    url = f"{FRONTEND_URL}/heizplan-card.js?v={VERSION}"
+    add_extra_js_url(hass, url)
+    add_extra_js_url(hass, url, es5=True)
     websocket.async_register(hass)
 
     async def add_exception(call: ServiceCall) -> None:
