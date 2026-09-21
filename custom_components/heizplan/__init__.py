@@ -49,15 +49,19 @@ def _manager(hass: HomeAssistant) -> HeizplanManager:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    # Die Version steckt im Pfad, nicht nur im Query-String: Manche Caches (u. a.
+    # der Service Worker der HA-Companion-App) matchen Requests ohne Query-String
+    # und liefern nach einem Update sonst weiter die alte Datei aus.
+    static_prefix = f"{FRONTEND_URL}/{VERSION}"
     await hass.http.async_register_static_paths(
-        [StaticPathConfig(FRONTEND_URL, str(Path(__file__).parent / "frontend"), False)]
+        [StaticPathConfig(static_prefix, str(Path(__file__).parent / "frontend"), False)]
     )
     # HA liefert Clients je nach Browser-Erkennung entweder das moderne
     # (ES-Modul-)Frontend oder das ES5-Legacy-Frontend aus und lädt "extra js url"
     # nur für den jeweils passenden Pfad. Manche Clients (z. B. die Android-
     # Companion-App) landen im ES5-Pfad, obwohl sie type="module" eigentlich
     # unterstützen – daher hier in beiden Pfaden registrieren, statt zu raten.
-    url = f"{FRONTEND_URL}/heizplan-card.js?v={VERSION}"
+    url = f"{static_prefix}/heizplan-card.js"
     add_extra_js_url(hass, url)
     add_extra_js_url(hass, url, es5=True)
     websocket.async_register(hass)
