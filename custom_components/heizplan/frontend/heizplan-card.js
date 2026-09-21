@@ -52,7 +52,7 @@ const STYLE = `
   .error { background: var(--error-color, #db4437); color: #fff; padding: 8px 12px; border-radius: 8px; }
   .rooms { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
   .room { border: 1px solid var(--divider-color); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
-  .room.disabled { opacity: 0.65; }
+  .room.disabled .schedule { opacity: 0.5; }
   .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
   .name { font-size: 1.15em; font-weight: 500; }
   .target { font-size: 1.8em; font-weight: 500; }
@@ -287,13 +287,17 @@ class HeizplanCard extends HTMLElement {
         <label class="switch"><input type="checkbox" data-action="enabled" data-room="${esc(r.id)}" ${r.enabled ? "checked" : ""}>Plan aktiv</label>
       </div>
       <div class="row">
-        <div><span class="target ${badgeClass}">${fmtTemp(r.temperature)}</span> <span class="badge ${badgeClass}">${badgeLabel}</span></div>
+        ${
+          r.enabled || r.source !== "plan"
+            ? `<div><span class="target ${badgeClass}">${fmtTemp(r.temperature)}</span> <span class="badge ${badgeClass}">${badgeLabel}</span></div>`
+            : `<div class="muted">Thermostat in Handsteuerung</div>`
+        }
         <div class="current">Raum ${fmtTemp(current)}</div>
       </div>
       <div class="info">${info}</div>
       ${next ? `<div class="info">${next}</div>` : ""}
       ${sensorHint}
-      ${barHtml(blocks, overlays, nowMin)}${TICKS}
+      <div class="schedule">${barHtml(blocks, overlays, nowMin)}${TICKS}</div>
       <div class="presets">${presets
         .map(
           (t) =>
