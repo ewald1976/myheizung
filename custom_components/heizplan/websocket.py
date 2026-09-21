@@ -25,6 +25,8 @@ def async_register(hass: HomeAssistant) -> None:
         ws_set_settings,
         ws_add_exception,
         ws_delete_exception,
+        ws_set_override,
+        ws_clear_override,
     ):
         websocket_api.async_register_command(hass, command)
 
@@ -142,3 +144,26 @@ async def ws_delete_exception(hass, connection, msg) -> None:
         hass, connection, msg,
         lambda m: m.async_delete_exception(msg["exception_id"], msg.get("room_id")),
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "heizplan/set_override",
+        vol.Required("room_id"): str,
+        vol.Required("temperature"): vol.Coerce(float),
+    }
+)
+@websocket_api.async_response
+async def ws_set_override(hass, connection, msg) -> None:
+    await _run(hass, connection, msg, lambda m: m.async_set_override(msg["room_id"], msg["temperature"]))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "heizplan/clear_override",
+        vol.Required("room_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_clear_override(hass, connection, msg) -> None:
+    await _run(hass, connection, msg, lambda m: m.async_clear_override(msg["room_id"]))

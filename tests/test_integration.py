@@ -134,6 +134,59 @@ async def test_websocket_exception_and_settings(hass, setup, hass_ws_client):
     assert (await client.receive_json())["error"]["code"] == "invalid"
 
 
+async def test_websocket_override(hass, setup, hass_ws_client):
+    _, calls = setup
+    client = await hass_ws_client(hass)
+    calls["temp"].clear()
+
+    # Montag 07:00 ist laut Standardplan "comfort" (23 °C) -> manuell auf 18 °C setzen.
+    await client.send_json_auto_id({"type": "heizplan/set_override", "room_id": "buro", "temperature": 18})
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _temps(calls) == {"climate.thermostat_buro": 18.0}
+
+    await client.send_json_auto_id({"type": "heizplan/get"})
+    data = (await client.receive_json())["result"]
+    buro = next(r for r in data["rooms"] if r["id"] == "buro")
+    assert buro["source"] == "override" and buro["temperature"] == 18.0
+
+    # "Zurück zum Plan" beendet die manuelle Temperatur sofort wieder.
+    calls["temp"].clear()
+    await client.send_json_auto_id({"type": "heizplan/clear_override", "room_id": "buro"})
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _temps(calls) == {"climate.thermostat_buro": 23.0}  # zurück auf comfort_temp
+
+    await client.send_json_auto_id({"type": "heizplan/get"})
+    data = (await client.receive_json())["result"]
+    buro = next(r for r in data["rooms"] if r["id"] == "buro")
+    assert buro["source"] == "plan"
+
+
+async def test_override_clears_automatically_at_plan_change(hass, setup, freezer):
+    _, calls = setup
+
+    # Montag 07:00 ist laut Standardplan "comfort" (23 °C) -> manuell auf 18 °C setzen.
+    manager = hass.data[DOMAIN]
+    await manager.async_set_override("buro", 18)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    calls["temp"].clear()
+
+    # Solange der Plan noch "comfort" sagt, bleibt die manuelle Temperatur auch nach einem Tick erhalten.
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _temps(calls) == {}
+
+    # Um 08:00 wechselt der Plan auf "eco" -> die manuelle Temperatur endet automatisch
+    # (wohnzimmer wechselt zeitgleich ganz normal laut Plan).
+    freezer.move_to("2026-09-14 08:00:00+02:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _temps(calls) == {"climate.thermostat_buro": 18.0, "climate.thermostat_wohnzimmer": 18.0}
+    assert manager.room_status("buro")["source"] == "plan"
+
+
 async def test_disabled_room_is_not_touched(hass, setup):
     _, calls = setup
     calls["temp"].clear()

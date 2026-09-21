@@ -3,6 +3,7 @@
 const DAYS = [["mon", "Mo"], ["tue", "Di"], ["wed", "Mi"], ["thu", "Do"], ["fri", "Fr"], ["sat", "Sa"], ["sun", "So"]];
 const WEEKDAY_BY_JS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const MODE_LABEL = { comfort: "Warm", eco: "Nacht" };
+const DEFAULT_PRESETS = [18, 23, 25];
 
 const pad = (n) => String(n).padStart(2, "0");
 const esc = (s) =>
@@ -57,9 +58,13 @@ const STYLE = `
   .target { font-size: 1.8em; font-weight: 500; }
   .target.comfort { color: var(--hp-warm); }
   .target.eco { color: var(--hp-cold); }
+  .target.override { color: var(--primary-color); }
   .badge { font-size: 0.8em; padding: 2px 8px; border-radius: 10px; color: #fff; vertical-align: middle; }
   .badge.comfort { background: var(--hp-warm); }
   .badge.eco { background: var(--hp-cold); }
+  .badge.override { background: var(--primary-color); }
+  .presets { display: flex; gap: 6px; }
+  .presets button { min-height: 40px; min-width: 52px; font-size: 1.05em; }
   .current { color: var(--secondary-text-color); }
   .info { font-size: 0.9em; color: var(--secondary-text-color); }
   .info.alert { color: var(--warning-color, #e0a000); }
@@ -255,6 +260,8 @@ class HeizplanCard extends HTMLElement {
 
     let info;
     if (!r.enabled) info = "Plan pausiert – Thermostat wird nicht gesteuert";
+    else if (r.source === "override")
+      info = `Manuell eingestellt${r.next_change ? ` · bis ${fmtWhen(r.next_change)}` : ""}`;
     else if (r.source === "exception")
       info = `Ausnahme${r.exception?.note ? `: ${esc(r.exception.note)}` : ""} · bis ${fmtWhen(r.exception.end)}`;
     else info = "Nach Wochenplan";
@@ -266,6 +273,9 @@ class HeizplanCard extends HTMLElement {
       r.last_sensor_reset && Date.now() - new Date(r.last_sensor_reset) < 86400000
         ? `<div class="info alert">⚠ Thermostat war auf internen Sensor gesprungen – um ${fmtWhen(r.last_sensor_reset)} korrigiert</div>`
         : "";
+    const badgeClass = r.source === "override" ? "override" : r.mode;
+    const badgeLabel = r.source === "override" ? "Manuell" : MODE_LABEL[r.mode];
+    const presets = this._config.presets ?? DEFAULT_PRESETS;
 
     return `<div class="room ${r.enabled ? "" : "disabled"}">
       <div class="row">
@@ -273,15 +283,25 @@ class HeizplanCard extends HTMLElement {
         <label class="switch"><input type="checkbox" data-action="enabled" data-room="${esc(r.id)}" ${r.enabled ? "checked" : ""}>Plan aktiv</label>
       </div>
       <div class="row">
-        <div><span class="target ${r.mode}">${fmtTemp(r.temperature)}</span> <span class="badge ${r.mode}">${MODE_LABEL[r.mode]}</span></div>
+        <div><span class="target ${badgeClass}">${fmtTemp(r.temperature)}</span> <span class="badge ${badgeClass}">${badgeLabel}</span></div>
         <div class="current">Raum ${fmtTemp(current)}</div>
       </div>
       <div class="info">${info}</div>
       ${next ? `<div class="info">${next}</div>` : ""}
       ${sensorHint}
       ${barHtml(blocks, overlays, nowMin)}${TICKS}
+      ${
+        r.enabled
+          ? `<div class="presets">${presets
+              .map(
+                (t) =>
+                  `<button class="${r.source === "override" && r.temperature === t ? "on" : ""}" data-action="set-override" data-room="${esc(r.id)}" data-temp="${t}">${t}°</button>`,
+              )
+              .join("")}</div>`
+          : ""
+      }
       <div class="actions">
-        ${r.source === "exception" ? `<button data-action="back-to-plan" data-room="${esc(r.id)}">Zurück zum Plan</button>` : ""}
+        ${r.source !== "plan" ? `<button data-action="back-to-plan" data-room="${esc(r.id)}">Zurück zum Plan</button>` : ""}
         <button data-action="boost" data-room="${esc(r.id)}">2 Std. warm</button>
         <button data-action="eco-today" data-room="${esc(r.id)}">Heute kühl lassen</button>
         <button data-action="edit-week" data-room="${esc(r.id)}">Plan bearbeiten</button>
@@ -429,9 +449,15 @@ class HeizplanCard extends HTMLElement {
       }
       case "back-to-plan": {
         const room = this._data.rooms.find((r) => r.id === roomId);
-        if (room?.exception) {
+        if (room?.source === "override") {
+          await this._call("heizplan/clear_override", { room_id: roomId });
+        } else if (room?.exception) {
           await this._call("heizplan/delete_exception", { exception_id: room.exception.id, room_id: roomId });
         }
+        break;
+      }
+      case "set-override": {
+        await this._call("heizplan/set_override", { room_id: roomId, temperature: Number(el.dataset.temp) });
         break;
       }
       case "edit-week": {

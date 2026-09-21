@@ -9,6 +9,11 @@ Temperaturen für „Warm“ und „Nacht“ – bedienbar über eine einzige Da
 - **Zwei Temperaturen für alle Räume**: Warm (Standard 23 °C) und Nacht (18 °C), in der Karte änderbar.
 - **Ausnahmen** mit Zeitraum, Räumen, Modus und Notiz (z. B. Homeoffice, Urlaub, Besuch).
   Schnellaktionen in der Karte: „2 Std. warm“, „Heute kühl lassen“, „Zurück zum Plan“.
+- **Manuelle Temperatur pro Raum**: Drei Presets (18/23/25 °C, in der Karte konfigurierbar) setzen
+  sofort eine feste Temperatur – ohne Zeitraum wählen zu müssen. Sie gilt bis zum nächsten
+  planmäßigen Wechsel und springt dann automatisch wieder auf den Plan zurück; „Zurück zum Plan“
+  beendet sie auch vorzeitig. Ist der Plan für den Raum pausiert, bleibt die Heizung ganz in
+  Handsteuerung (am Thermostat selbst, auch ausschaltbar).
 - **Plan pro Raum pausieren** (z. B. im Sommer).
 - **Handverstellung bleibt**: Heizplan setzt das Thermostat nur beim Wechsel Warm ↔ Nacht.
   Wer am Thermostat dreht, behält die Temperatur bis zum nächsten Wechsel.
@@ -34,8 +39,9 @@ Die Karte wird von der Integration automatisch geladen (keine Ressource nötig):
 ```yaml
 type: custom:heizplan-card
 # optional:
-title: Heizung        # "" blendet den Titel aus
-rooms: [buro]         # nur bestimmte Räume anzeigen
+title: Heizung          # "" blendet den Titel aus
+rooms: [buro]           # nur bestimmte Räume anzeigen
+presets: [18, 21, 23]   # eigene Presets statt 18/23/25 °C
 ```
 
 ## Entities
@@ -49,7 +55,8 @@ zuordnen lässt. Die globalen Temperaturen hängen am Gerät „Heizplan“.
 | `switch.heizplan_<raum>_plan_aktiv` | Plan für den Raum an/aus |
 | `number.heizplan_warm_temperatur`, `number.heizplan_nacht_temperatur` | globale Temperaturen |
 
-Dienste für eigene Automationen: `heizplan.add_exception`, `heizplan.delete_exception`.
+Dienste für eigene Automationen: `heizplan.add_exception`, `heizplan.delete_exception`,
+`heizplan.set_override`, `heizplan.clear_override`.
 
 ## Entwicklung
 

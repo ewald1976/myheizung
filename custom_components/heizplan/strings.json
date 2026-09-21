@@ -45,6 +45,21 @@
         "exception_id": { "name": "Ausnahme-ID", "description": "ID der Ausnahme" },
         "room_id": { "name": "Raum", "description": "Nur diesen Raum aus der Ausnahme entfernen" }
       }
+    },
+    "set_override": {
+      "name": "Manuelle Temperatur setzen",
+      "description": "Setzt eine feste Temperatur für einen Raum, bis der Plan das nächste Mal wechselt.",
+      "fields": {
+        "room_id": { "name": "Raum", "description": "Raum-ID, z. B. buro" },
+        "temperature": { "name": "Temperatur", "description": "Ziel-Temperatur in °C" }
+      }
+    },
+    "clear_override": {
+      "name": "Manuelle Temperatur zurücksetzen",
+      "description": "Beendet die manuelle Temperatur und kehrt sofort zum Plan zurück.",
+      "fields": {
+        "room_id": { "name": "Raum", "description": "Raum-ID, z. B. buro" }
+      }
     }
   }
 }

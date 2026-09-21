@@ -126,7 +126,9 @@ class HeizplanManager:
             "exceptions": stored.get("exceptions", []),
         }
         for room_id in self.rooms:
-            self.data["rooms"].setdefault(room_id, {"enabled": True, "week": deepcopy(DEFAULT_WEEK)})
+            self.data["rooms"].setdefault(
+                room_id, {"enabled": True, "week": deepcopy(DEFAULT_WEEK), "override": None}
+            )
 
     def _save(self) -> None:
         self._store.async_delay_save(lambda: self.data, 1)
@@ -148,14 +150,17 @@ class HeizplanManager:
         conf = self.data["rooms"][room_id]
         exceptions = self._parsed_exceptions()
         mode, exc = logic.desired_mode(conf["week"], exceptions, room_id, now)
+        override = conf.get("override")
+        if override and override["base_mode"] != mode:
+            override = None
         upcoming = logic.next_change(conf["week"], exceptions, room_id, now)
         stored_exc = next((e for e in self.data["exceptions"] if exc and e["id"] == exc["id"]), None)
         external = self._external.get(room_id, {})
         return {
             "enabled": conf["enabled"],
             "mode": mode,
-            "temperature": self.temperature_for(mode),
-            "source": "exception" if exc else "plan",
+            "temperature": override["temperature"] if override else self.temperature_for(mode),
+            "source": "override" if override else ("exception" if exc else "plan"),
             "exception": stored_exc,
             "next_change": upcoming[0].isoformat() if upcoming else None,
             "next_mode": upcoming[1] if upcoming else None,
@@ -183,7 +188,29 @@ class HeizplanManager:
         await self.async_evaluate()
 
     async def async_set_enabled(self, room_id: str, enabled: bool) -> None:
-        self._room_conf(room_id)["enabled"] = enabled
+        conf = self._room_conf(room_id)
+        conf["enabled"] = enabled
+        conf["override"] = None
+        self._applied.pop(room_id, None)
+        self._save()
+        await self.async_evaluate()
+
+    async def async_set_override(self, room_id: str, temperature: float) -> None:
+        """Setzt eine manuelle Temperatur, die bis zum nächsten Planwechsel gilt."""
+        conf = self._room_conf(room_id)
+        now = dt_util.now()
+        exceptions = self._parsed_exceptions()
+        mode, _ = logic.desired_mode(conf["week"], exceptions, room_id, now)
+        conf["override"] = {"temperature": _clamp_temp(temperature), "base_mode": mode}
+        self._applied.pop(room_id, None)
+        self._save()
+        await self.async_evaluate()
+
+    async def async_clear_override(self, room_id: str) -> None:
+        conf = self._room_conf(room_id)
+        if conf.get("override") is None:
+            return
+        conf["override"] = None
         self._applied.pop(room_id, None)
         self._save()
         await self.async_evaluate()
@@ -271,7 +298,13 @@ class HeizplanManager:
                 if room_id in force_rooms:
                     self._applied.pop(room_id, None)
                 mode, _ = logic.desired_mode(conf["week"], exceptions, room_id, now)
-                target = (mode, self.temperature_for(mode))
+                override = conf.get("override")
+                if override and override["base_mode"] != mode:
+                    # Der Plan ist inzwischen weitergesprungen: manuelle Temperatur endet hier.
+                    conf["override"] = None
+                    override = None
+                    self._save()
+                target = ("override", override["temperature"]) if override else (mode, self.temperature_for(mode))
                 # Nur bei Wechsel setzen: Handverstellung am Thermostat bleibt bis zum nächsten Wechsel.
                 if self._applied.get(room_id) == target:
                     continue

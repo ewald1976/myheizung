@@ -35,6 +35,10 @@ ADD_EXCEPTION_SCHEMA = vol.Schema(
 DELETE_EXCEPTION_SCHEMA = vol.Schema(
     {vol.Required("exception_id"): cv.string, vol.Optional("room_id"): cv.string}
 )
+SET_OVERRIDE_SCHEMA = vol.Schema(
+    {vol.Required("room_id"): cv.string, vol.Required("temperature"): vol.Coerce(float)}
+)
+CLEAR_OVERRIDE_SCHEMA = vol.Schema({vol.Required("room_id"): cv.string})
 
 
 def _manager(hass: HomeAssistant) -> HeizplanManager:
@@ -63,8 +67,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
 
+    async def set_override(call: ServiceCall) -> None:
+        try:
+            await _manager(hass).async_set_override(**call.data)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+
+    async def clear_override(call: ServiceCall) -> None:
+        try:
+            await _manager(hass).async_clear_override(**call.data)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+
     hass.services.async_register(DOMAIN, "add_exception", add_exception, ADD_EXCEPTION_SCHEMA)
     hass.services.async_register(DOMAIN, "delete_exception", delete_exception, DELETE_EXCEPTION_SCHEMA)
+    hass.services.async_register(DOMAIN, "set_override", set_override, SET_OVERRIDE_SCHEMA)
+    hass.services.async_register(DOMAIN, "clear_override", clear_override, CLEAR_OVERRIDE_SCHEMA)
     return True
 
 
