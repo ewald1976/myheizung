@@ -52,7 +52,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await hass.http.async_register_static_paths(
         [StaticPathConfig(FRONTEND_URL, str(Path(__file__).parent / "frontend"), False)]
     )
-    add_extra_js_url(hass, f"{FRONTEND_URL}/heizplan-card.js?v={VERSION}")
+    # es5=True lädt die Karte als klassisches <script> statt als ES-Modul: einige
+    # Android-WebViews (z. B. in der HA-Companion-App) laden dynamisch eingefügte
+    # type="module"-Skripte unzuverlässig ("Custom element doesn't exist").
+    add_extra_js_url(hass, f"{FRONTEND_URL}/heizplan-card.js?v={VERSION}", es5=True)
     websocket.async_register(hass)
 
     async def add_exception(call: ServiceCall) -> None:
