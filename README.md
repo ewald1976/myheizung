@@ -10,10 +10,11 @@ Temperaturen für „Warm“ und „Nacht“ – bedienbar über eine einzige Da
 - **Ausnahmen** mit Zeitraum, Räumen, Modus und Notiz (z. B. Homeoffice, Urlaub, Besuch).
   Schnellaktionen in der Karte: „2 Std. warm“, „Heute kühl lassen“, „Zurück zum Plan“.
 - **Manuelle Temperatur pro Raum**: Drei Presets (18/23/25 °C, in der Karte konfigurierbar) setzen
-  sofort eine feste Temperatur – ohne Zeitraum wählen zu müssen. Sie gilt bis zum nächsten
-  planmäßigen Wechsel und springt dann automatisch wieder auf den Plan zurück; „Zurück zum Plan“
-  beendet sie auch vorzeitig. Ist der Plan für den Raum pausiert, bleibt die Heizung ganz in
-  Handsteuerung (am Thermostat selbst, auch ausschaltbar).
+  sofort eine feste Temperatur – ohne Zeitraum wählen zu müssen. Bei aktivem Plan gilt sie bis
+  zum nächsten planmäßigen Wechsel und springt dann automatisch zurück; „Zurück zum Plan“ beendet
+  sie auch vorzeitig. Ist der Plan pausiert (z. B. weil noch kein verlässlicher Wochenplan
+  feststeht), bleiben die Presets trotzdem nutzbar – die gewählte Temperatur bleibt dann einfach
+  bestehen, bis man sie manuell ändert oder aufhebt.
 - **Plan pro Raum pausieren** (z. B. im Sommer).
 - **Handverstellung bleibt**: Heizplan setzt das Thermostat nur beim Wechsel Warm ↔ Nacht.
   Wer am Thermostat dreht, behält die Temperatur bis zum nächsten Wechsel.

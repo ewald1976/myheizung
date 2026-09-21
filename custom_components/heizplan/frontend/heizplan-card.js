@@ -259,7 +259,11 @@ class HeizplanCard extends HTMLElement {
       .filter(Boolean);
 
     let info;
-    if (!r.enabled) info = "Plan pausiert – Thermostat wird nicht gesteuert";
+    if (!r.enabled)
+      info =
+        r.source === "override"
+          ? `Manuell auf ${fmtTemp(r.temperature)} · Plan pausiert`
+          : "Plan pausiert – Thermostat wird nicht gesteuert";
     else if (r.source === "override")
       info = `Manuell eingestellt${r.next_change ? ` · bis ${fmtWhen(r.next_change)}` : ""}`;
     else if (r.source === "exception")
@@ -290,20 +294,24 @@ class HeizplanCard extends HTMLElement {
       ${next ? `<div class="info">${next}</div>` : ""}
       ${sensorHint}
       ${barHtml(blocks, overlays, nowMin)}${TICKS}
-      ${
-        r.enabled
-          ? `<div class="presets">${presets
-              .map(
-                (t) =>
-                  `<button class="${r.source === "override" && r.temperature === t ? "on" : ""}" data-action="set-override" data-room="${esc(r.id)}" data-temp="${t}">${t}°</button>`,
-              )
-              .join("")}</div>`
-          : ""
-      }
+      <div class="presets">${presets
+        .map(
+          (t) =>
+            `<button class="${r.source === "override" && r.temperature === t ? "on" : ""}" data-action="set-override" data-room="${esc(r.id)}" data-temp="${t}">${t}°</button>`,
+        )
+        .join("")}</div>
       <div class="actions">
-        ${r.source !== "plan" ? `<button data-action="back-to-plan" data-room="${esc(r.id)}">Zurück zum Plan</button>` : ""}
-        <button data-action="boost" data-room="${esc(r.id)}">2 Std. warm</button>
-        <button data-action="eco-today" data-room="${esc(r.id)}">Heute kühl lassen</button>
+        ${
+          r.source === "override" || r.source === "exception"
+            ? `<button data-action="back-to-plan" data-room="${esc(r.id)}">${r.enabled ? "Zurück zum Plan" : "Manuelle Temperatur aufheben"}</button>`
+            : ""
+        }
+        ${
+          r.enabled
+            ? `<button data-action="boost" data-room="${esc(r.id)}">2 Std. warm</button>
+               <button data-action="eco-today" data-room="${esc(r.id)}">Heute kühl lassen</button>`
+            : ""
+        }
         <button data-action="edit-week" data-room="${esc(r.id)}">Plan bearbeiten</button>
       </div>
     </div>`;

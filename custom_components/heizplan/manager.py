@@ -151,7 +151,8 @@ class HeizplanManager:
         exceptions = self._parsed_exceptions()
         mode, exc = logic.desired_mode(conf["week"], exceptions, room_id, now)
         override = conf.get("override")
-        if override and override["base_mode"] != mode:
+        # Bei pausiertem Plan gibt es keinen Wechsel, an dem die manuelle Temperatur enden könnte.
+        if override and conf["enabled"] and override["base_mode"] != mode:
             override = None
         upcoming = logic.next_change(conf["week"], exceptions, room_id, now)
         stored_exc = next((e for e in self.data["exceptions"] if exc and e["id"] == exc["id"]), None)
@@ -292,19 +293,25 @@ class HeizplanManager:
                 if room.get("temp_sensor"):
                     await self._async_check_external_sensor(room_id, room, now)
                 conf = self.data["rooms"][room_id]
-                if not conf["enabled"]:
-                    self._applied.pop(room_id, None)
-                    continue
                 if room_id in force_rooms:
                     self._applied.pop(room_id, None)
-                mode, _ = logic.desired_mode(conf["week"], exceptions, room_id, now)
                 override = conf.get("override")
-                if override and override["base_mode"] != mode:
-                    # Der Plan ist inzwischen weitergesprungen: manuelle Temperatur endet hier.
-                    conf["override"] = None
-                    override = None
-                    self._save()
-                target = ("override", override["temperature"]) if override else (mode, self.temperature_for(mode))
+                if not conf["enabled"]:
+                    # Plan pausiert: nur eine manuell gesetzte Temperatur wird gehalten, sonst
+                    # bleibt das Thermostat komplett in Handsteuerung. Es gibt keinen Planwechsel,
+                    # der die manuelle Temperatur wieder beenden könnte.
+                    if override is None:
+                        self._applied.pop(room_id, None)
+                        continue
+                    target = ("override", override["temperature"])
+                else:
+                    mode, _ = logic.desired_mode(conf["week"], exceptions, room_id, now)
+                    if override and override["base_mode"] != mode:
+                        # Der Plan ist inzwischen weitergesprungen: manuelle Temperatur endet hier.
+                        conf["override"] = None
+                        override = None
+                        self._save()
+                    target = ("override", override["temperature"]) if override else (mode, self.temperature_for(mode))
                 # Nur bei Wechsel setzen: Handverstellung am Thermostat bleibt bis zum nächsten Wechsel.
                 if self._applied.get(room_id) == target:
                     continue

@@ -163,6 +163,37 @@ async def test_websocket_override(hass, setup, hass_ws_client):
     assert buro["source"] == "plan"
 
 
+async def test_override_works_while_plan_paused(hass, setup):
+    _, calls = setup
+    manager = hass.data[DOMAIN]
+
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.heizplan_buro_plan_aktiv"}, blocking=True
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    calls["temp"].clear()
+
+    # Auch bei pausiertem Plan lässt sich per Preset direkt eine Temperatur setzen ...
+    await manager.async_set_override("buro", 21)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _temps(calls) == {"climate.thermostat_buro": 21.0}
+    assert manager.room_status("buro")["source"] == "override"
+
+    # ... und bleibt auch nach einem Tick bestehen, weil es keinen Plan gibt, der sie beendet.
+    calls["temp"].clear()
+    await manager.async_evaluate()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _temps(calls) == {}
+    assert manager.room_status("buro")["source"] == "override"
+
+    # Aufheben lässt sich die manuelle Temperatur trotzdem jederzeit.
+    calls["temp"].clear()
+    await manager.async_clear_override("buro")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert _temps(calls) == {}  # kein Zielwert mehr -> Thermostat bleibt unangetastet
+    assert manager.room_status("buro")["source"] == "plan"
+
+
 async def test_override_clears_automatically_at_plan_change(hass, setup, freezer):
     _, calls = setup
 
