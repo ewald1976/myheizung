@@ -243,6 +243,9 @@ class HeizplanCard extends HTMLElement {
 
   _renderRoom(r) {
     const current = this._hass?.states?.[r.climate]?.attributes?.current_temperature;
+    const thermostatTarget = this._hass?.states?.[r.climate]?.attributes?.temperature;
+    const manuallyAdjusted =
+      r.enabled && thermostatTarget != null && Math.round(thermostatTarget * 2) !== Math.round(r.temperature * 2);
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const blocks = (r.week[todayKey()] || []).map((b) => [toMin(b.from), endMin(b.to)]);
@@ -292,10 +295,11 @@ class HeizplanCard extends HTMLElement {
             ? `<div><span class="target ${badgeClass}">${fmtTemp(r.temperature)}</span> <span class="badge ${badgeClass}">${badgeLabel}</span></div>`
             : `<div class="muted">Thermostat in Handsteuerung</div>`
         }
-        <div class="current">Raum ${fmtTemp(current)}</div>
+        <div class="current">Raum ${fmtTemp(current)} · Thermostat ${fmtTemp(thermostatTarget)}</div>
       </div>
       <div class="info">${info}</div>
       ${next ? `<div class="info">${next}</div>` : ""}
+      ${manuallyAdjusted ? `<div class="info alert">✋ Am Thermostat auf ${fmtTemp(thermostatTarget)} verstellt – gilt bis zum nächsten Wechsel</div>` : ""}
       ${sensorHint}
       <div class="schedule">${barHtml(blocks, overlays, nowMin)}${TICKS}</div>
       <div class="presets">${presets
