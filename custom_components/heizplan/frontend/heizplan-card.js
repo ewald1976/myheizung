@@ -616,13 +616,25 @@ if (!customElements.get("heizplan-card")) {
   });
 
   // HA lädt zusätzliche Frontend-Module parallel zum Dashboard. Dabei kann
-  // Lovelace die Karte schon als fehlerhaft markieren, obwohl sie kurz danach
-  // registriert wird. Ein einmaliges erneutes Auswerten der aktuellen Route
-  // lässt Lovelace die betroffene Ansicht mit dem nun vorhandenen Element neu
-  // aufbauen. Das Event ist auch außerhalb eines Dashboards harmlos und darf
-  // nicht von querySelector("hui-root") abhängen: hui-root liegt in HAs
-  // Shadow DOM und ist vom document aus nicht direkt auffindbar.
+  // Lovelace bereits eine dauerhafte Fehlerkarte erzeugen, bevor dieses Element
+  // registriert ist. Die Fehlerkarte kann tief in HAs Shadow DOM liegen; daher
+  // alle offenen Shadow Roots durchsuchen und nur bei genau diesem Ladefehler
+  // einmal neu laden. Beim zweiten Aufbau liegt das Modul bereits im Cache.
   setTimeout(() => {
-    window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: true } }));
+    const hasLoadError = (root) => {
+      for (const el of root.querySelectorAll("*")) {
+        if (el.tagName === "HUI-ERROR-CARD") {
+          const message = `${el.error || ""} ${el._error || ""} ${el.shadowRoot?.textContent || ""}`;
+          if (/heizplan-card/i.test(message)) return true;
+        }
+        if (el.shadowRoot && hasLoadError(el.shadowRoot)) return true;
+      }
+      return false;
+    };
+    const reloadKey = "heizplan-card-load-retry-0.3.9";
+    if (hasLoadError(document) && !sessionStorage.getItem(reloadKey)) {
+      sessionStorage.setItem(reloadKey, "1");
+      location.reload();
+    }
   }, 2500);
 }
