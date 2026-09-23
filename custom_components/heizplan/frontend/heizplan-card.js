@@ -46,6 +46,7 @@ const TICKS = `<div class="ticks"><span>0</span><span>6</span><span>12</span><sp
 
 const STYLE = `
   :host { --hp-warm: #e8743b; --hp-cold: #4a90c9; }
+  ha-card { display: block; background: var(--card-background-color); color: var(--primary-text-color); border-radius: 12px; }
   .card { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
   .title { font-size: 1.4em; font-weight: 500; }
   h3 { margin: 0; font-size: 1.05em; font-weight: 500; }

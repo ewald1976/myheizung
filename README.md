@@ -46,7 +46,7 @@ nicht bearbeiten. Dann diese Ressource in `configuration.yaml` ergänzen:
 lovelace:
   resource_mode: yaml
   resources:
-    - url: /heizplan_static/0.4.1/heizplan-card-loader.js
+    - url: /heizplan_static/0.4.2/heizplan-card-loader.js
       type: js
 ```
 
@@ -59,6 +59,26 @@ title: Heizung          # "" blendet den Titel aus
 rooms: [buro]           # nur bestimmte Räume anzeigen
 presets: [18, 21, 23]   # eigene Presets statt 18/23/25 °C
 ```
+
+### Alternative für die Companion-App
+
+Wenn die App die benutzerdefinierte Karte beim Laden nicht zuverlässig
+registriert, kann dieselbe Heizplan-Oberfläche in einer eingebauten `iframe`-Karte
+laufen. Deren Skripte laden innerhalb des Frames in fester Reihenfolge; für
+die Dashboard-Karte selbst ist keine Custom-Element-Registrierung nötig:
+
+```yaml
+type: iframe
+url: /heizplan_static/0.4.2/heizplan-frame.html?room=buro&title=
+grid_options:
+  columns: 12
+  rows: 10
+```
+
+`room=buro` begrenzt die Anzeige auf einen Raum; ohne `room` werden alle Räume
+gezeigt. Mehrere Räume sind über wiederholte `room`-Parameter möglich. Die
+Karte nutzt die bestehende Home-Assistant-Sitzung und funktioniert daher nur
+innerhalb eines Home-Assistant-Dashboards.
 
 ## Entities
 
