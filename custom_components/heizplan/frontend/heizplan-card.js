@@ -120,7 +120,7 @@ const STYLE = `
   .block { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 `;
 
-class HeizplanCard extends HTMLElement {
+class HeizplanCardContent extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -606,35 +606,6 @@ class HeizplanCard extends HTMLElement {
   }
 }
 
-if (!customElements.get("heizplan-card")) {
-  customElements.define("heizplan-card", HeizplanCard);
-  window.customCards = window.customCards || [];
-  window.customCards.push({
-    type: "heizplan-card",
-    name: "Heizplan",
-    description: "Wochenpläne, Ausnahmen und Temperaturen für die Heizung",
-  });
-
-  // HA lädt zusätzliche Frontend-Module parallel zum Dashboard. Dabei kann
-  // Lovelace bereits eine dauerhafte Fehlerkarte erzeugen, bevor dieses Element
-  // registriert ist. Die Fehlerkarte kann tief in HAs Shadow DOM liegen; daher
-  // alle offenen Shadow Roots durchsuchen und nur bei genau diesem Ladefehler
-  // einmal neu laden. Beim zweiten Aufbau liegt das Modul bereits im Cache.
-  setTimeout(() => {
-    const hasLoadError = (root) => {
-      for (const el of root.querySelectorAll("*")) {
-        if (el.tagName === "HUI-ERROR-CARD") {
-          const message = `${el.error || ""} ${el._error || ""} ${el.shadowRoot?.textContent || ""}`;
-          if (/heizplan-card/i.test(message)) return true;
-        }
-        if (el.shadowRoot && hasLoadError(el.shadowRoot)) return true;
-      }
-      return false;
-    };
-    const reloadKey = "heizplan-card-load-retry-0.3.9";
-    if (hasLoadError(document) && !sessionStorage.getItem(reloadKey)) {
-      sessionStorage.setItem(reloadKey, "1");
-      location.reload();
-    }
-  }, 2500);
+if (!customElements.get("heizplan-card-content")) {
+  customElements.define("heizplan-card-content", HeizplanCardContent);
 }

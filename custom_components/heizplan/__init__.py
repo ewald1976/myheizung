@@ -62,9 +62,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # nur für den jeweils passenden Pfad. Manche Clients (z. B. die Android-
     # Companion-App) landen im ES5-Pfad, obwohl sie type="module" eigentlich
     # unterstützen – daher hier in beiden Pfaden registrieren, statt zu raten.
-    url = f"{static_prefix}/heizplan-card.js"
-    add_extra_js_url(hass, url)
-    add_extra_js_url(hass, url, es5=True)
+    # Der winzige Loader registriert das von Lovelace erwartete Element sofort;
+    # die eigentliche Karte darf danach unabhängig fertig laden. So kann HA nicht
+    # vor der Registrierung in einen dauerhaften Fehlerzustand laufen.
+    for filename in ("heizplan-card-loader.js", "heizplan-card.js"):
+        url = f"{static_prefix}/{filename}"
+        add_extra_js_url(hass, url)
+        add_extra_js_url(hass, url, es5=True)
     websocket.async_register(hass)
 
     async def add_exception(call: ServiceCall) -> None:
