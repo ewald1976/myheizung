@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.lovelace.resources import ResourceStorageCollection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -57,14 +58,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await hass.http.async_register_static_paths(
         [StaticPathConfig(static_prefix, str(Path(__file__).parent / "frontend"), False)]
     )
+    # Dashboard-Ressourcen werden vor den Karten geladen. Der Loader muss dort
+    # stehen, damit Lovelace beim ersten setConfig bereits das Custom Element
+    # kennt. In YAML-Ressourcenmodus ist die Sammlung nicht beschreibbar.
+    lovelace = hass.data["lovelace"]
+    resources = lovelace.resources if hasattr(lovelace, "resources") else lovelace["resources"]
+    if isinstance(resources, ResourceStorageCollection):
+        await resources.async_get_info()  # bestehende Ressourcen vor Änderungen laden
+        # Der Loader enthält keine Imports; klassisches JS funktioniert auch in
+        # Companion-WebViews, die dynamische ES-Module unzuverlässig laden.
+        loader_url = f"{static_prefix}/heizplan-card-loader.js"
+        existing = next(
+            (
+                item
+                for item in resources.async_items()
+                if item.get("url", "").startswith(f"{FRONTEND_URL}/")
+            ),
+            None,
+        )
+        if existing is None:
+            await resources.async_create_item({"res_type": "js", "url": loader_url})
+        elif existing["url"] != loader_url or existing.get("type") != "js":
+            await resources.async_update_item(
+                existing["id"], {"res_type": "js", "url": loader_url}
+            )
     # HA liefert Clients je nach Browser-Erkennung entweder das moderne
     # (ES-Modul-)Frontend oder das ES5-Legacy-Frontend aus und lädt "extra js url"
     # nur für den jeweils passenden Pfad. Manche Clients (z. B. die Android-
     # Companion-App) landen im ES5-Pfad, obwohl sie type="module" eigentlich
     # unterstützen – daher hier in beiden Pfaden registrieren, statt zu raten.
-    # Der winzige Loader registriert das von Lovelace erwartete Element sofort;
-    # die eigentliche Karte darf danach unabhängig fertig laden. So kann HA nicht
-    # vor der Registrierung in einen dauerhaften Fehlerzustand laufen.
+    # Fallback für Dashboards mit YAML-Ressourcen und ältere Frontends.
     for filename in ("heizplan-card-loader.js", "heizplan-card.js"):
         url = f"{static_prefix}/{filename}"
         add_extra_js_url(hass, url)

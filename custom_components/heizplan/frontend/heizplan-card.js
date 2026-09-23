@@ -1,4 +1,5 @@
 /* Heizplan-Karte für Home Assistant – ohne Build-Schritt, reines Web Component. */
+(() => {
 
 const DAYS = [["mon", "Mo"], ["tue", "Di"], ["wed", "Mi"], ["thu", "Do"], ["fri", "Fr"], ["sat", "Sa"], ["sun", "So"]];
 const WEEKDAY_BY_JS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -609,3 +610,4 @@ class HeizplanCardContent extends HTMLElement {
 if (!customElements.get("heizplan-card-content")) {
   customElements.define("heizplan-card-content", HeizplanCardContent);
 }
+})();

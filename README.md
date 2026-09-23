@@ -35,7 +35,22 @@ Thermostate wählen und pro Thermostat optional das Hygrometer.
 
 ## Karte
 
-Die Karte wird von der Integration automatisch geladen (keine Ressource nötig):
+Die Karte wird von der Integration automatisch als Dashboard-Ressource eingetragen.
+Nach einem Update der Integration Home Assistant neu starten und das Dashboard in
+der Companion-App einmal neu laden.
+
+Bei `lovelace: resource_mode: yaml` kann die Integration die Ressourcenliste
+nicht bearbeiten. Dann diese Ressource in `configuration.yaml` ergänzen:
+
+```yaml
+lovelace:
+  resource_mode: yaml
+  resources:
+    - url: /heizplan_static/0.4.1/heizplan-card-loader.js
+      type: js
+```
+
+Kartenkonfiguration:
 
 ```yaml
 type: custom:heizplan-card

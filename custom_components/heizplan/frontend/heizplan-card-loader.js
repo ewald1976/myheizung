@@ -1,4 +1,5 @@
 /* Kleiner, sofort ladbarer Wrapper gegen HAs asynchrones Ressourcen-Race. */
+(() => {
 
 class HeizplanCardLoader extends HTMLElement {
   constructor() {
@@ -45,3 +46,4 @@ if (!customElements.get("heizplan-card")) {
     description: "Wochenpläne, Ausnahmen und Temperaturen für die Heizung",
   });
 }
+})();
