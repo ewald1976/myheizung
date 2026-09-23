@@ -13,6 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
@@ -100,6 +101,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = HeizplanManager(hass, entry)
     await manager.async_load()
+    hub = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="Heizplan",
+        entry_type=dr.DeviceEntryType.SERVICE,
+        sw_version=VERSION,
+    )
+    manager.hub_device_id = hub.id
     entry.runtime_data = manager
     hass.data[DOMAIN] = manager
 

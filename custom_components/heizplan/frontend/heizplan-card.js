@@ -614,4 +614,16 @@ if (!customElements.get("heizplan-card")) {
     name: "Heizplan",
     description: "Wochenpläne, Ausnahmen und Temperaturen für die Heizung",
   });
+
+  // HA lädt zusätzliche Frontend-Module parallel zum Dashboard. Dabei kann
+  // Lovelace die Karte schon als fehlerhaft markieren, obwohl sie kurz danach
+  // registriert wird. Ein einmaliges erneutes Auswerten der aktuellen Route
+  // lässt Lovelace die betroffene Ansicht mit dem nun vorhandenen Element neu
+  // aufbauen. Der verzögerte Check beschränkt das auf tatsächlich geladene
+  // Dashboards und vermeidet einen sichtbaren Seiten-Reload.
+  setTimeout(() => {
+    if (document.querySelector("hui-root")) {
+      window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: true } }));
+    }
+  }, 2500);
 }

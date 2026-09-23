@@ -24,12 +24,14 @@ def hub_device(manager: HeizplanManager) -> DeviceInfo:
 
 def room_device(manager: HeizplanManager, room: dict[str, Any]) -> DeviceInfo:
     """Pro Raum ein eigenes Gerät, damit es einem Bereich zugeordnet werden kann."""
+    if manager.hub_device_id is None:
+        raise RuntimeError("Heizplan-Hubgerät wurde noch nicht registriert")
     return DeviceInfo(
         identifiers={(DOMAIN, f"{manager.entry.entry_id}_{room['id']}")},
         name=f"Heizplan {room['name']}",
         entry_type=DeviceEntryType.SERVICE,
         sw_version=VERSION,
-        via_device=(DOMAIN, manager.entry.entry_id),
+        via_device_id=manager.hub_device_id,
     )
 
 

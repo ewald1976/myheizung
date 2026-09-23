@@ -83,6 +83,7 @@ class HeizplanManager:
         self.entry = entry
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
         self.data: dict[str, Any] = {}
+        self.hub_device_id: str | None = None
         self._applied: dict[str, tuple[str, float]] = {}
         self._external: dict[str, dict[str, Any]] = {}
         self._unsub: CALLBACK_TYPE | None = None
