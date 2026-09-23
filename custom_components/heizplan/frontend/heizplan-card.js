@@ -619,11 +619,10 @@ if (!customElements.get("heizplan-card")) {
   // Lovelace die Karte schon als fehlerhaft markieren, obwohl sie kurz danach
   // registriert wird. Ein einmaliges erneutes Auswerten der aktuellen Route
   // lässt Lovelace die betroffene Ansicht mit dem nun vorhandenen Element neu
-  // aufbauen. Der verzögerte Check beschränkt das auf tatsächlich geladene
-  // Dashboards und vermeidet einen sichtbaren Seiten-Reload.
+  // aufbauen. Das Event ist auch außerhalb eines Dashboards harmlos und darf
+  // nicht von querySelector("hui-root") abhängen: hui-root liegt in HAs
+  // Shadow DOM und ist vom document aus nicht direkt auffindbar.
   setTimeout(() => {
-    if (document.querySelector("hui-root")) {
-      window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: true } }));
-    }
+    window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: true } }));
   }, 2500);
 }
